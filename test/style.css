@@ -3,7 +3,7 @@
   padding: 0;
   /* border: 0; */
   font-size: 100%;
-  font: inherit;
+  font-family: sans-serif;
   vertical-align: baseline;
   box-sizing: border-box;
 }
@@ -13,6 +13,38 @@
   flex-direction: column;
 }
 
+pre {
+  margin: 1rem;
+}
+
+#render {
+  width: 90%;
+  margin: 0 auto;
+}
+
+.lblSection {
+  margin-top: 1rem;
+  font-size: 200%;
+}
+
+.lblField {
+  margin-top: 0.5rem;
+}
+
 textarea {
-  height: 20vh;
+  margin-left: 5%;
+  resize: vertical;
+  /* height: 20vh; */
+}
+
+.lblGroup {
+  text-align: center;
+}
+
+.inputs,
+.outputs {
+  border-radius: 0.25rem;
+  padding: 1rem;
+  margin: 0.25rem;
+  background-color: #0001;
 }

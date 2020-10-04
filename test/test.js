@@ -1,4 +1,17 @@
-// grab included libraries
+/**
+ * Testing wallet design & prototyping necessary steps
+ *
+ * Action flow has 4 major steps:
+ * 1. Application provides "REQUEST INSTRUCTIONS" (RI)
+ * 2. Wallet provides "PAYMENT METHOD" (PM)
+ * 3. Transaction is built using constraints of (1) filled in by (2) and user input
+ * 4. Before user signs the final transaction, user presented with full layout.
+ */
+
+/* -------------------------------------------------------------------------- */
+/*                              set up libraries                              */
+/* -------------------------------------------------------------------------- */
+
 const {
   bitcoin,
   bech32,
@@ -9,11 +22,11 @@ const {
   bs58check,
   esploraApi: esplora
 } = bitcoinjs
-console.log('libraries used:', bitcoinjs)
+console.log('Libraries imported:', bitcoinjs)
 
 // other useful shortcuts
-const API_PATH = 'https://blockstream.info/testnet/api/'
-// const API_PATH = 'https://blockstream.info/api/'
+const API_PATH = 'https://blockstream.info/testnet/api/' // testnet
+// const API_PATH = 'https://blockstream.info/api/' // mainnet
 const op = bitcoin.opcodes
 const encode = bitcoin.script.number.encode
 const network = bitcoin.networks.testnet // or .bitcoin
@@ -23,203 +36,154 @@ const sighash_all = bitcoin.Transaction.SIGHASH_ALL
 /*                              create page items                             */
 /* -------------------------------------------------------------------------- */
 
-const lblPM = document.createElement('div')
-lblPM.innerHTML = 'Payment method (wallet):'
-const taPM = document.createElement('textarea')
-document.body.appendChild(lblPM)
-document.body.appendChild(taPM)
+const createElements = async () => {
+  resetRender()
+  addSection({ label: 'Detailed transaction editor' })
+  addField({ label: 'Transaction version', initial: '2' })
+  addField({ label: 'LockTime', initial: '0' })
+  addSection({ label: 'All inputs' })
+  addInput({ label: 'Input #0' })
+  addSection({ label: 'All outputs' })
+  addOutput({ label: 'Output #0' })
+  addOutput({ label: 'Output #1' })
+}
 
-const lblSI = document.createElement('div')
-lblSI.innerHTML = 'Spending instructions (requested):'
-const taSI = document.createElement('textarea')
-document.body.appendChild(lblSI)
-document.body.appendChild(taSI)
+createElements()
 
-const lblOutput = document.createElement('div')
-lblSI.innerHTML = 'tx hex:'
-const taOut = document.createElement('textarea')
-document.body.appendChild(lblOutput)
-document.body.appendChild(taOut)
+// const lblPM = document.createElement('div')
+// lblPM.innerHTML = 'Payment method (wallet):'
+// const taPM = document.createElement('textarea')
+// document.body.appendChild(lblPM)
+// document.body.appendChild(taPM)
+
+// const lblSI = document.createElement('div')
+// lblSI.innerHTML = 'Spending instructions (requested):'
+// const taSI = document.createElement('textarea')
+// document.body.appendChild(lblSI)
+// document.body.appendChild(taSI)
+
+// const lblOutput = document.createElement('div')
+// lblSI.innerHTML = 'tx hex:'
+// const taOut = document.createElement('textarea')
+// document.body.appendChild(lblOutput)
+// document.body.appendChild(taOut)
 
 /* -------------------------------------------------------------------------- */
 /*                            spending instructions                           */
 /* -------------------------------------------------------------------------- */
 
-const request = {
-  // describe transaction, optional, default empty string
-  info: 'test request',
-  // tx version, optional, default 2
-  version: undefined,
-  // transaction nLockTime to use, default 0
-  nLockTime: undefined,
-  outputs: [
-    {
-      // integer, vout or output index (0+) that must be used for this output, optional
-      vout: 0,
-      // string, description of output for user, optional, empty string is default
-      info: "Bob's address",
-      // boolean, if output is optional, optional, default is false
-      optional: undefined,
-      // boolean, if optional should it be set by default, optional, default is true
-      defaultOption: undefined,
-      // string enum, standard type of output that determines output's visible SCRIPTPUBKEY, optional, {'P' (payment) | 'RETURN' (OP_RETURN) | ...}, 'P' is default
-      type: undefined,
-      // string, target address, required if type is not 'RETURN'
-      address: 'tb1ql4ttnp2ay93qyqplgev343cwwqyqvdxyfdzk44',
-      // integer, fixed value (sats) to use, optional
-      value: 1000,
-      // integer, max value (sats) user should send, optional
-      maxValue: undefined,
-      // integer, min Value (sats) user should send, optional
-      minValue: undefined,
-      // hex to embed in OP_RETURN type tx if used, optional
-      embedHex: undefined,
-      // boolean, note if simple address that only requires signing, optional, default is true
-      justSign: true,
-      // string, ASM of redeem script necessary to spend it later, optional
-      redeemScript: undefined,
-      // string, ASM of witness script necessary to spend it later, optional
-      witnessScript: undefined,
-      // hex string, inputs for redeem script if known necessary to spend it later, optional
-      redeemScriptInputs: undefined,
-      // hex string, inputs for witness script if known necessary to spend it later, optional
-      witnessScriptInputs: undefined,
-      // hex string, pubkeys to use to sign for redeem script inputs, optional
-      redeemPubkeyForSigInputs: undefined,
-      // hex string, pubkeys to use to sign for witness script inputs, optional
-      witnessPubkeyForSigInputs: undefined,
-      // string array, describing each input necessary for redeem script, optional
-      infoRedeemScriptInputs: undefined,
-      // string array, describing each input necessary for witness script, optional
-      infoWitnessScriptInputs: undefined
-    }
-  ],
-  inputs: [
-    {
-      // integer, vin or input index (0+) that must be used for this input, optional
-      vin: 0,
-      // string, description of input for user, optional, empty string is default
-      info: "Alice's address",
-      // boolean, if input is optional, optional, default is false
-      optional: undefined,
-      // boolean, if input should be set by default, optional, default is true
-      defaultOption: undefined,
-      // string, txid of utxo to use for input, optional
-      txid: undefined,
-      // integer, vout of utxo to use for input, optional
-      vout: undefined,
-      // string, address of utxo to use for input, optional
-      address: 'tb1qzx9calarm0qc6vs6nc4kxqv4xk49rpf6842jsl',
-      // integer, nSequence to use, optional, default is 0xffffffff which is 4294967295
-      sequence: undefined,
-      // string hex of utxo used for input, optional
-      rawtx: undefined,
-      // boolean, note if simple address that only requires signing, optional in request, default is true
-      justSign: true,
-      // array of integers, sighash to use, optional, default SIGHASH_ALL or 0x01
-      sighashTypes: undefined,
-      // string, ASM of redeem script necessary to spend it, optional
-      redeemScript: undefined,
-      // string, ASM of witness script necessary to spend it, optional
-      witnessScript: undefined,
-      // hex string, inputs for redeem script if known necessary to spend it, optional
-      redeemScriptInputs: undefined,
-      // hex string, inputs for witness script if known necessary to spend it, optional
-      witnessScriptInputs: undefined,
-      // hex string, pubkeys to use to sign for redeem script inputs, optional
-      redeemPubkeyForSigInputs: undefined,
-      // hex string, pubkeys to use to sign for witness script inputs, optional
-      witnessPubkeyForSigInputs: undefined,
-      // string array, describing each input necessary for redeem script, optional, default is empty array
-      infoRedeemScriptInputs: undefined,
-      // string array, describing each input necessary for witness script, optional, default is empty array
-      infoWitnessScriptInputs: undefined
-    }
-  ]
+// taSI.value = JSON.stringify(exampleRequestInstructions, null, 2)
+
+/* -------------------------------------------------------------------------- */
+/*                               Payment method                               */
+/* -------------------------------------------------------------------------- */
+
+// simplest wallet is some of these (never stored in clear text)
+// * array of private keys (e.g. WIF's)
+// * HD wallet mnemonic + path
+// * xpriv + path
+// ideally also marked outputs if private (avoid recombining)
+
+const wallet = {
+  // keys for fixed addresses, { wif: string, private: boolean, info: string }
+  wifs: [],
+  // mnemonics for HD wallets, { words: string, path: string, private: boolean, info: string }
+  mnemonics: [],
+  // xpriv for HD wallets, { xpriv: string, path: string, private: boolean, info: string }
+  xpriv: [],
+
+  // known addresses derived from above or added manually
+  addresses: {},
+  // known public keys derived from above or added manually
+  pubkeys: {},
+  // known xpubs derived from above or added manually to watch-only
+  xpubs: {},
+
+  // possible after API
+  //
+  // known utxos when possible to track ownership
+  utxos: [],
+  txs: [], // tx history when possible to track past activity (useful for HD)
+
+  // custom fields for non-standard usecases like random stealth address paths
+  custom: {}
 }
-taSI.value = JSON.stringify(request, null, 2)
 
-/* -------------------------------------------------------------------------- */
-/*                                  build tx                                  */
-/* -------------------------------------------------------------------------- */
+// ;(async () => {})()
 
-const psbt = new bitcoin.Psbt()
+//   /* ------------------------ get all utxo for address ------------------------ */
 
-// export unfinished const psbtBaseText = psbt.toBase64()
-// import unfinished const psbt1 = bitcoin.Psbt.fromBase64(psbtBaseText)
-// combine with psbt.combine(psbt1, psbt2)
+//   const utxos = []
+//   for (let i = 0; i < wallet.addresses.length; i++) {
+//     const res = await esplora.getUTXOListAPI(API_PATH, wallet.addresses[i])
+//     res.forEach(utxo => {
+//       const utxoWithAddress = {
+//         ...utxo,
+//         address: wallet.addresses[i]
+//       }
+//       utxos.push(utxoWithAddress)
+//     })
+//   }
 
-// test API
-;(async () => {
-  // const res = await esplora.getHeightAPI(API_PATH)
+/* ---------------------- get the raw tx for each txid ---------------------- */
 
-  /* ------------------------ get all utxo for address ------------------------ */
+// const rawtxs = {}
+// for (let i = 0; i < utxos.length; i++) {
+//   const thisTxid = utxos[i].txid
+//   rawtxs[thisTxid] = await esplora.getRawTxAPI(API_PATH, thisTxid)
+//   await new Promise(r => setTimeout(r, 500))
+// }
 
-  // check outputs for this address
-  await new Promise(r => setTimeout(r, 500))
-  const addressToCheck = 'tb1qzx9calarm0qc6vs6nc4kxqv4xk49rpf6842jsl'
-  const utxos = await esplora.getUTXOListAPI(API_PATH, addressToCheck)
+/* ----------------------------- complete wallet ---------------------------- */
 
-  /* ---------------------- get the raw tx for each txid ---------------------- */
+// for (let i = 0; i < utxos.length; i++) {
+//   // wallet is just tracking utxos w/ various parameters (never stored cleartext)
+//   wallet.utxos.push({
+//     // boolean, is this output meant to be private, optional, default false
+//     private: false,
+//     // { address, txid, value, vout, status: { block_hash, block_height, block_time, confirmed }}
+//     ...utxos[i],
+//     // raw tx hex, eventually needed to spend
+//     rawTxHex: rawtxs[utxos[i].txid] // raw tx hex needed for psbt
+//   })
+// }
 
-  const rawtxs = {}
-  for (let i = 0; i < utxos.length; i++) {
-    const thisTxid = utxos[i].txid
-    rawtxs[thisTxid] = await esplora.getRawTxAPI(API_PATH, thisTxid)
-    await new Promise(r => setTimeout(r, 500))
-  }
+// const wif = window.prompt('enter WIF to use for wallet')
+// wallet.wifs.push(String(wif))
 
-  /* ----------------------------- complete wallet ---------------------------- */
-
-  const wallet = {
-    wifs: [], // keys for fixed addresses
-    mnemonics: [], // mnemonics for HD wallets
-    utxos: [], // known utxos when possible to track ownership
-    txs: [] // tx history when possible to track past activity (useful for HD)
-  }
-  for (let i = 0; i < utxos.length; i++) {
-    // wallet is just tracking utxos w/ various parameters (never stored cleartext)
-    wallet.utxos.push({
-      // boolean, is this output meant to be private, optional, default false
-      private: false,
-      // { txid, value, vout, status: { block_hash, block_height, block_time, confirmed }}
-      ...utxos[i],
-      //  address of the utxo, necessary if request uses input address (e.g. identity)
-      address: addressToCheck,
-      // raw tx hex, eventually needed to spend
-      rawTxHex: rawtxs[utxos[i].txid] // raw tx hex needed for psbt
-    })
-  }
-
-  const wif = window.prompt('enter WIF to use for wallet')
-  wallet.wifs.push(String(wif))
-
-  console.log('exported wallet:', JSON.stringify(wallet, null, 2))
-  taPM.value = JSON.stringify(wallet, null, 2)
-})()
+// console.log('exported wallet:', JSON.stringify(wallet, null, 2))
+// taPM.value = JSON.stringify(wallet, null, 2)
 
 /* -------------------------------------------------------------------------- */
 /*                        if need a new address to use                        */
 /* -------------------------------------------------------------------------- */
 
-const generateNewAddress = () => {
-  const pathRandom = "m/44'/0'/0'/0/0"
-  const mnemonicRandom = bip39.generateMnemonic()
-  const seedRandom = bip39.mnemonicToSeedSync(mnemonicRandom)
-  const rootRandom = bip32.fromSeed(seedRandom)
-  const nodeRandom = rootRandom.derivePath(pathRandom)
-  const addressRandom = bitcoin.payments.p2wpkh({
-    pubkey: nodeRandom.publicKey,
-    network
-  }).address
-  const wifRandom = nodeRandom.toWIF()
+// const generateNewAddress = () => {
+//   const pathRandom = "m/44'/0'/0'/0/0"
+//   const mnemonicRandom = bip39.generateMnemonic()
+//   const seedRandom = bip39.mnemonicToSeedSync(mnemonicRandom)
+//   const rootRandom = bip32.fromSeed(seedRandom)
+//   const nodeRandom = rootRandom.derivePath(pathRandom)
+//   const addressRandom = bitcoin.payments.p2wpkh({
+//     pubkey: nodeRandom.publicKey,
+//     network
+//   }).address
+//   const wifRandom = nodeRandom.toWIF()
 
-  console.log(`
-    If need a new address to use
-    address: ${addressRandom}
-    mnemonic: ${mnemonicRandom}
-    path: ${pathRandom}
-    WIF: ${wifRandom}
-  `)
-}
+//   console.log(`
+//     If need a new address to use
+//     address: ${addressRandom}
+//     mnemonic: ${mnemonicRandom}
+//     path: ${pathRandom}
+//     WIF: ${wifRandom}
+//   `)
+// }
 // generateNewAddress();
+
+// const psbt = new bitcoin.Psbt()
+// export unfinished const psbtBaseText = psbt.toBase64()
+// import unfinished const psbt1 = bitcoin.Psbt.fromBase64(psbtBaseText)
+// combine with psbt.combine(psbt1, psbt2)
+
+// check outputs for this address
+// await new Promise(r => setTimeout(r, 500))

@@ -8,15 +8,27 @@
   </head>
 
   <body>
+    <pre>
+      Possible steps to achieve:
+      1) Initial: Wallet allows generation of any kind of transaction manually
+      2) Request: app can request specific criteria or instructions for transaction
+      3) Allow: User can allow wallet to attempt to complete those instructions
+      4) Finalize: User can customize (ins, outs, fees) and finish the transaction creation
+      5) Broadcast: If desired, can broadcast the transaction
+      6) Management: can CPFP or RBF broadcast transactions
+    </pre>
+
+    <div id="render"></div>
+
     <!-- only use one: -->
-
-    <!-- browserified bitcoin library with clear errors -->
+    <!-- THIS: browserified bitcoin library with clear errors -->
     <script src="libs/bitcoinjs.js"></script>
-
-    <!-- compact minified bitcoin library for faster use -->
+    <!-- OR THIS: compact minified bitcoin library for faster use -->
     <!-- <script src="libs/bitcoinjs.min.js"></script> -->
 
     <!-- loading our testing script that uses above libraries -->
+    <script src="element_creators.js"></script>
+    <script src="test_payment_instructions.js"></script>
     <script src="test.js"></script>
   </body>
 
