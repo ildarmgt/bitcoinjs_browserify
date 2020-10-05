@@ -41,8 +41,8 @@ textarea {
   text-align: center;
 }
 
-.inputs,
-.outputs {
+.input,
+.output {
   border-radius: 0.25rem;
   padding: 1rem;
   margin: 0.25rem;

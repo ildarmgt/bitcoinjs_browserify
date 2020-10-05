@@ -39,46 +39,74 @@ const addField = ({
   parent.appendChild(newInput)
 }
 
-const addInput = ({ label = 'group', parent = renderRoot } = {}) => {
+const addInput = ({ parent = renderRoot, input = {}, vin = 0 } = {}) => {
   // create group's div
   const newGroup = document.createElement('div')
-  newGroup.classList.add('inputs')
+  newGroup.classList.add('input')
   parent.appendChild(newGroup)
   // inside:
   // add label describing input
   const newLabel = document.createElement('div')
-  newLabel.innerHTML = sanitizeHTML(label)
+  newLabel.innerHTML = sanitizeHTML(`Input #${vin}`)
   newLabel.classList.add('lblGroup')
   newGroup.appendChild(newLabel)
   // add field for hash, index, sequence, nonwitnessutxo
-  addField({ label: "utxo's txid (hex)", parent: newGroup })
-  addField({ label: "utxo's index (integer)", parent: newGroup })
-  addField({ label: "utxo's raw transaction (hex)", parent: newGroup })
+  addField({ label: 'value (sats)', initial: input.value, parent: newGroup })
   addField({
-    label: 'nSequence (integer)',
-    initial: '0xffffffff',
+    label: "utxo's txid (hex)",
+    initial: input.utxoTxid,
     parent: newGroup
   })
-  addField({ label: 'redeemScript (hex)', parent: newGroup })
-  addField({ label: 'witnessScript (hex)', parent: newGroup })
-  addField({ label: 'value (sats)', parent: newGroup })
+  addField({
+    label: "utxo's vout (integer)",
+    initial: input.utxoVout,
+    parent: newGroup
+  })
+  addField({
+    label: "utxo's raw transaction (hex)",
+    initial: input.utxoTxHex,
+    parent: newGroup
+  })
+  addField({
+    label: 'nSequence (integer)',
+    initial: input.nSequence,
+    parent: newGroup
+  })
+  addField({
+    label: 'redeemScript (hex)',
+    initial: input.redeemScriptHex,
+    parent: newGroup
+  })
+  addField({
+    label: 'witnessScript (hex)',
+    initial: input.witnessScriptHex,
+    parent: newGroup
+  })
 }
 
-const addOutput = ({ label = 'group', parent = renderRoot } = {}) => {
+const addOutput = ({ parent = renderRoot, output = {}, vout = 0 } = {}) => {
   // create group's div
   const newGroup = document.createElement('div')
-  newGroup.classList.add('outputs')
+  newGroup.classList.add('output')
   parent.appendChild(newGroup)
   // inside:
   // add label describing output
   const newLabel = document.createElement('div')
-  newLabel.innerHTML = sanitizeHTML(label)
+  newLabel.innerHTML = sanitizeHTML(`Output #${vout}`)
   newLabel.classList.add('lblGroup')
   newGroup.appendChild(newLabel)
   // add field for hash, index, sequence, nonwitnessutxo
-  addField({ label: 'address (empty if OP_RETURN type)', parent: newGroup })
-  addField({ label: 'value (sats)', parent: newGroup })
-  addField({ label: 'Data to embed if OP_RETURN type (hex)', parent: newGroup })
+  addField({ label: 'value (sats)', initial: output.value, parent: newGroup })
+  addField({
+    label: 'address (empty if OP_RETURN type)',
+    initial: output.address,
+    parent: newGroup
+  })
+  addField({
+    label: 'Data to embed if OP_RETURN type (hex)',
+    initial: output.dataHex,
+    parent: newGroup
+  })
 }
 
 const resetRender = ({ parent = renderRoot } = {}) => {

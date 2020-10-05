@@ -33,22 +33,68 @@ const network = bitcoin.networks.testnet // or .bitcoin
 const sighash_all = bitcoin.Transaction.SIGHASH_ALL
 
 /* -------------------------------------------------------------------------- */
+/*                      keep track of transaction layout                      */
+/* -------------------------------------------------------------------------- */
+
+const defaultInput = {
+  utxoTxid: '',
+  utxoVout: '',
+  utxoTxHex: '',
+  nSequence: '0xffffffff',
+  redeemScriptHex: '',
+  witnessScriptHex: '',
+  value: ''
+}
+
+const defaultOutput = {
+  address: '',
+  value: '',
+  dataHex: ''
+}
+
+const defaultTransactionBuilder = {
+  version: 2,
+  locktime: 0,
+  inputs: [],
+  outputs: []
+}
+
+// create initial transaction
+let activeTransactionBuilder = JSON.parse(
+  JSON.stringify(defaultTransactionBuilder)
+)
+activeTransactionBuilder.inputs.push({ ...defaultInput })
+activeTransactionBuilder.outputs.push({ ...defaultOutput })
+// activeTransactionBuilder.outputs.push({ ...defaultOutput })
+
+/* -------------------------------------------------------------------------- */
 /*                              create page items                             */
 /* -------------------------------------------------------------------------- */
 
-const createElements = async () => {
+const createElements = async transactionBuilder => {
+  // clear all html
   resetRender()
+
+  // set up basics
   addSection({ label: 'Detailed transaction editor' })
-  addField({ label: 'Transaction version', initial: '2' })
-  addField({ label: 'LockTime', initial: '0' })
+  addField({
+    label: 'Transaction version',
+    initial: transactionBuilder.version
+  })
+  addField({ label: 'LockTime', initial: transactionBuilder.locktime })
+
   addSection({ label: 'All inputs' })
-  addInput({ label: 'Input #0' })
+  transactionBuilder.inputs.forEach((input, vin) => {
+    addInput({ input, vin })
+  })
+
   addSection({ label: 'All outputs' })
-  addOutput({ label: 'Output #0' })
-  addOutput({ label: 'Output #1' })
+  transactionBuilder.outputs.forEach((output, vout) => {
+    addOutput({ output, vout })
+  })
 }
 
-createElements()
+createElements(activeTransactionBuilder)
 
 // const lblPM = document.createElement('div')
 // lblPM.innerHTML = 'Payment method (wallet):'
