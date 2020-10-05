@@ -64,14 +64,15 @@ let activeTransactionBuilder = JSON.parse(
   JSON.stringify(defaultTransactionBuilder)
 )
 activeTransactionBuilder.inputs.push({ ...defaultInput })
+activeTransactionBuilder.inputs.push({ ...defaultInput })
 activeTransactionBuilder.outputs.push({ ...defaultOutput })
-// activeTransactionBuilder.outputs.push({ ...defaultOutput })
+activeTransactionBuilder.outputs.push({ ...defaultOutput })
 
 /* -------------------------------------------------------------------------- */
 /*                              create page items                             */
 /* -------------------------------------------------------------------------- */
 
-const createElements = async transactionBuilder => {
+const drawElements = async transactionBuilder => {
   // clear all html
   resetRender()
 
@@ -85,16 +86,18 @@ const createElements = async transactionBuilder => {
 
   addSection({ label: 'All inputs' })
   transactionBuilder.inputs.forEach((input, vin) => {
-    addInput({ input, vin })
+    addInput({ input, vin, transactionBuilder })
   })
 
   addSection({ label: 'All outputs' })
   transactionBuilder.outputs.forEach((output, vout) => {
-    addOutput({ output, vout })
+    addOutput({ output, vout, transactionBuilder })
   })
 }
 
-createElements(activeTransactionBuilder)
+activeTransactionBuilder.drawElements = drawElements
+
+drawElements(activeTransactionBuilder)
 
 // const lblPM = document.createElement('div')
 // lblPM.innerHTML = 'Payment method (wallet):'

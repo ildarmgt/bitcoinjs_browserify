@@ -39,12 +39,31 @@ const addField = ({
   parent.appendChild(newInput)
 }
 
-const addInput = ({ parent = renderRoot, input = {}, vin = 0 } = {}) => {
+const addInput = ({
+  parent = renderRoot,
+  input,
+  vin = 0,
+  transactionBuilder
+} = {}) => {
   // create group's div
   const newGroup = document.createElement('div')
   newGroup.classList.add('input')
   parent.appendChild(newGroup)
+
   // inside:
+
+  // button to remove output
+  const btnClose = document.createElement('div')
+  btnClose.innerHTML = sanitizeHTML(`-`)
+  btnClose.classList.add('removebutton')
+  btnClose.onclick = () => {
+    // remove output
+    console.log('deleting input', transactionBuilder.inputs.splice(vin, 1))
+    // redraw scene
+    transactionBuilder.drawElements(transactionBuilder)
+  }
+  newGroup.appendChild(btnClose)
+
   // add label describing input
   const newLabel = document.createElement('div')
   newLabel.innerHTML = sanitizeHTML(`Input #${vin}`)
@@ -84,17 +103,37 @@ const addInput = ({ parent = renderRoot, input = {}, vin = 0 } = {}) => {
   })
 }
 
-const addOutput = ({ parent = renderRoot, output = {}, vout = 0 } = {}) => {
+const addOutput = ({
+  parent = renderRoot,
+  output,
+  vout = 0,
+  transactionBuilder
+} = {}) => {
   // create group's div
   const newGroup = document.createElement('div')
   newGroup.classList.add('output')
   parent.appendChild(newGroup)
+
   // inside:
+
+  // button to remove output
+  const btnClose = document.createElement('div')
+  btnClose.innerHTML = sanitizeHTML(`-`)
+  btnClose.classList.add('removebutton')
+  btnClose.onclick = () => {
+    // remove output
+    console.log('deleting output', transactionBuilder.outputs.splice(vout, 1))
+    // redraw scene
+    transactionBuilder.drawElements(transactionBuilder)
+  }
+  newGroup.appendChild(btnClose)
+
   // add label describing output
   const newLabel = document.createElement('div')
   newLabel.innerHTML = sanitizeHTML(`Output #${vout}`)
   newLabel.classList.add('lblGroup')
   newGroup.appendChild(newLabel)
+
   // add field for hash, index, sequence, nonwitnessutxo
   addField({ label: 'value (sats)', initial: output.value, parent: newGroup })
   addField({
